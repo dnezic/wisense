@@ -13,7 +13,7 @@ Project list
 ------------------
 
 ### 1. lcd
-Folder **lcd** contains python code for communication with LCD 16x02 display using I2C protocol. I2C is enabled using **mkjdz** board in order to save a lot of GPIO pins.
+Folder **lcd** contains python code for communication with LCD 16x02 display using I2C protocol. I2C is enabled using **mjkdz** board in order to save a lot of GPIO pins.
 Python script **lcd-dbus.py** listens for incoming dbus messages and sends them to the LCD display.
 Configuration for dbus protocol is placed in *docs/dbus-configuration* folder. Folder tree needs to be copied over Raspberry Pi filesystem but before that, the file **com.svesoftware.raspberry.lcd.service** in folder */docs/dbus-configuration/usr/share/dbus-1/system-services* has to be modified to match exact path of **lcd-dbus.py** script. This is required for dbus to automatically starts script when specific message is received by dbus service.
 
