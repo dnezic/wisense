@@ -19,11 +19,11 @@ Configuration for dbus protocol is placed in *docs/dbus-configuration* folder. F
 
 ####Test LCD screen:
 ```bash
-#> python3 lcd-send.py
+python3 lcd-send.py
 ```
 or
 ```bash
-#> python3 lcd-time.py
+python3 lcd-time.py
 ```
 
 
@@ -34,8 +34,32 @@ Transmission is set to "No acknowledge" with fixed payload length in order to ac
 ####Prerequisites:
 * dbus-sender
 
-  A
-* rf4l
+  Library for sending of dbus messages.
 
-  B
+  #####Install
 
+  ```bash
+  make
+  make install
+  ```
+
+* rf24l
+
+  Library for nRF24L01P+ transciever control.
+
+  #####Install 
+
+  ```bash
+  make
+  make install
+  ```
+
+* rf24sense-dbus
+
+  Server for receiving of data messages from wireless sensors.
+  #####Compile and execute
+
+  ```bash
+  make
+  ./rf24sense-dbus
+  ```  

@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dbus-1.0/dbus/dbus.h>
+#include <dbus/dbus.h>
 #include "dbus_sender.h"
 
 /**

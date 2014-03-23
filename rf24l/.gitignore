@@ -1,1 +1,4 @@
 /Release
+*.so
+*.o
+*.la

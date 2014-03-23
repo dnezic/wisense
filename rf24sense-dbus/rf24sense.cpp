@@ -144,8 +144,12 @@ int main(int argc, char** argv) {
 		if (strcmp(argv[1], "-v") == 0) {
 			debug = true;
 		}
-		if (strcmp(argv[1], "-h") == 0) {
+		else if (strcmp(argv[1], "-h") == 0) {
 			printf("Usage: ./rf24sense [-v]\n-v write data to data.log file.\n");
+			return -1;
+		}
+		else {
+			return -1;
 		}
 	}
 
