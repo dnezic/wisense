@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=com.svesoftware.raspberry.lcd
+Exec="/home/pi/raspberry/git/lcd/lcd-dbus.py" 
+User=root
