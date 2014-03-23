@@ -24,6 +24,6 @@ sorted_entries.reverse() # for most recent entries first
 
 for item in sorted_entries:
         print(len(item["title"]))
-        print(hello(item["title"], 'a'))
+        print(hello(item["title"], 'rss', 'nomode'))
 #        print(hello('hi, how are you?'))
 print("Over and out")

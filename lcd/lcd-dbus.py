@@ -42,7 +42,7 @@ class LCDDBus(dbus.service.Object):
         self.maps[sender] = text
         print(len(self.maps))
         self.l.go()
-        return 'ok'
+        return 'ok, drawing it...'
 
 
 class LCD():
@@ -104,7 +104,7 @@ class LCD():
                  # 'text' is bigger than total number of characters on a screen.
                  # we are going to roll text page by page for ROLL_NUM number of times           
                  for roll in range(ROLL_NUM):
-              
+
                     # display initial text (first page)
                     self._display_page(text[:NUM_CHARS])
                     self._wait_some()
@@ -121,13 +121,15 @@ class LCD():
                           end = True
                        self.lcd.writeString(text[i:s].ljust(NUM_CHARS_IN_ROW))
                  
+                       self.lcd.setPosition(2, 0)
                        if not end:
                           # display second row
-                          self.lcd.setPosition(2,0)
                           if len(text) < NUM_CHARS_IN_ROW + s:
                               self.lcd.writeString(text[s:].ljust(NUM_CHARS_IN_ROW))
                           else:
                               self.lcd.writeString(text[s:s + NUM_CHARS_IN_ROW].ljust(NUM_CHARS_IN_ROW))
+                       else:
+                          self.lcd.writeString("".ljust(NUM_CHARS_IN_ROW))
 
                        self._wait_some()
        
