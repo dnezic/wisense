@@ -22,7 +22,7 @@
 #define RPI_CE_PIN 25
 
 #define SPI_DEV "/dev/spidev0.0"
-#define PAYLOAD_SIZE 8
+#define PAYLOAD_SIZE 11
 #define LOG_FILE "data.log"
 
 

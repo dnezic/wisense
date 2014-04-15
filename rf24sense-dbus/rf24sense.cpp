@@ -104,10 +104,25 @@ void loop(void) {
 				voltage = voltage | payload_buffer[1];
 
 				printf("Voltage: %d (mV)\n", voltage);
-				printf("Humidity: %d.%d\n", (int) payload_buffer[2], (int) payload_buffer[3]);
-				printf("Temperature: %d.%d\n", (int) payload_buffer[4], (int) payload_buffer[5]);
-				printf("EC: %d\n", (int) payload_buffer[6]);
-				printf("Counter: %d\n", (int) payload_buffer[7]);
+				printf("Temperature: %d.%d\n", (int) payload_buffer[2], (int) payload_buffer[3]);
+				
+                                int temperature = (int) payload_buffer[2];
+                                int temperature_dec = (int) payload_buffer[3];
+				long pressure = (int) payload_buffer[4];
+				pressure = pressure << 8;
+				pressure = pressure | (int) payload_buffer[5];
+                                pressure = pressure << 8;
+                                pressure = pressure | (int) payload_buffer[6];
+                                pressure = pressure << 8;
+                                pressure = pressure | (int) payload_buffer[7];
+	
+
+				//printf("EC: %d\n", (int) payload_buffer[6]);
+				printf("Counter: %d\n", (int) payload_buffer[8]);
+				printf("RC: %d\n", (int) payload_buffer[9]);
+				printf("FB: %d\n", (int) payload_buffer[10]);
+				//printf("FB AUX: %d\n", (int) payload_buffer[10]);
+
 
 				char lcd[32];
 				char timestr[10];
@@ -115,13 +130,13 @@ void loop(void) {
 				time_t now = time(NULL);
 				struct tm *t = localtime(&now);
 				strftime(timestr, sizeof(timestr) - 1, "%H:%M", t);
+                                float pressure_f = pressure / 100.0;
 
-				sprintf(lcd, "%s  %d (mV) %d.%dC %d.%d%%", timestr, voltage, (int) payload_buffer[4], (int) payload_buffer[5], (int) payload_buffer[2], (int) payload_buffer[3]);
+				sprintf(lcd, "%s  %d (mV) %d.%dC %.2f", timestr, voltage, temperature, temperature_dec, pressure_f);
 
 				if (debug) {
 					destFile = fopen(LOG_FILE, "a");
-					fprintf(destFile, "%s  %d (mV) %d.%dC %d.%d%% EC: %d CNT: %d\n", timestr, voltage, (int) payload_buffer[4], (int) payload_buffer[5], (int) payload_buffer[2],
-							(int) payload_buffer[3], (int) payload_buffer[6], (int) payload_buffer[7]);
+					fprintf(destFile, "%s  %d (mV) %d.%dC %.2f CNT: %d %d %d\n", timestr, voltage, temperature, temperature_dec, pressure_f, (int) payload_buffer[8], (int) payload_buffer[9], (int) payload_buffer[10]);
 					fclose(destFile);
 				}
 
