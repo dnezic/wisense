@@ -66,7 +66,6 @@ void setup(void) {
 
 	//
 	// Start listening
-	//
 
 	radio.startListening();
 
@@ -115,13 +114,14 @@ void loop(void) {
                                 pressure = pressure | (int) payload_buffer[6];
                                 pressure = pressure << 8;
                                 pressure = pressure | (int) payload_buffer[7];
-	
-
-				//printf("EC: %d\n", (int) payload_buffer[6]);
-				printf("Counter: %d\n", (int) payload_buffer[8]);
-				printf("RC: %d\n", (int) payload_buffer[9]);
-				printf("FB: %d\n", (int) payload_buffer[10]);
-				//printf("FB AUX: %d\n", (int) payload_buffer[10]);
+				// dht
+				int temperature_dht = (int) payload_buffer[8];
+				int temperature_dht_dec = (int) payload_buffer[9];
+				int humidity_dht = (int) payload_buffer[10];
+				int humidity_dht_dec = (int) payload_buffer[11];
+				printf("DHT22 E: %d\n", (int) payload_buffer[12]);
+				printf("Counter: %d\n", (int) payload_buffer[13]);
+				printf("Error count: %d\n", (int) payload_buffer[14]);
 
 
 				char lcd[32];
@@ -131,12 +131,13 @@ void loop(void) {
 				struct tm *t = localtime(&now);
 				strftime(timestr, sizeof(timestr) - 1, "%H:%M", t);
                                 float pressure_f = pressure / 100.0;
+                                float voltage_f = voltage / 1000.0;
 
-				sprintf(lcd, "%s  %d (mV) %d.%dC %.2f", timestr, voltage, temperature, temperature_dec, pressure_f);
+				sprintf(lcd, "%s %.1fV %d.%dC %d.%d%% %.2f", timestr, voltage_f, temperature_dht, temperature_dht_dec, humidity_dht, humidity_dht_dec, pressure_f);
 
 				if (debug) {
 					destFile = fopen(LOG_FILE, "a");
-					fprintf(destFile, "%s  %d (mV) %d.%dC %.2f CNT: %d %d %d\n", timestr, voltage, temperature, temperature_dec, pressure_f, (int) payload_buffer[8], (int) payload_buffer[9], (int) payload_buffer[10]);
+					fprintf(destFile, "%s  %d (mV) %d.%dC %.2f %d.%dC %d.%d%% CNT: %d %d %d\n", timestr, voltage, temperature, temperature_dec, pressure_f, (int) payload_buffer[8], (int) payload_buffer[9], (int) payload_buffer[10], (int) payload_buffer[11], (int) payload_buffer[12], (int)payload_buffer[13], (int)payload_buffer[14]);
 					fclose(destFile);
 				}
 
