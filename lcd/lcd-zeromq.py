@@ -30,6 +30,8 @@ class LCDZeroMQ:
         self.socket.bind("tcp://*:" + port)        
         self.l = LCD(maps)
         self.l.set_lcd(lcd)
+        self.buffer = 32*" "
+        
 	    
     def draw(self, text, sender, mode):
         print('Sender, mode:', sender, mode)
@@ -39,9 +41,24 @@ class LCDZeroMQ:
         self.l.go()
         return 'ok, drawing it...'
     
-    def draw_raw(self, x, y, text):     
+    def draw_raw(self, x, y, text):
+        
         self.l.setPosition(int(x), int(y))
         self.l.writeString(text)
+        
+        start = int(y)+( (int(x)-1) * 16 )
+        self.buffer = self.buffer[:start] + text + self.buffer[start + len(text):]
+        
+        if len(text) > 16:
+           self.l.setPosition(2, 0)
+           self.l.writeString(text[16:])
+           
+    def restore(self):        
+        self.draw_raw(1, 0, self.stored[0:16])
+        self.draw_raw(2, 0, self.stored[16:32])
+        
+    def store(self):
+        self.stored = self.buffer
         
 
 
@@ -151,10 +168,17 @@ while True:
    message = e.socket.recv()   
    message = message.decode('utf-8', 'ignore')
    id = message[:2]
-   x = int(message[2], 16)
-   y = int(message[3], 16)
-   message = message[4:]      
-   e.draw_raw(x, y, message)
+   cmd = message[2:4]
+   
+   if cmd == 'ST':
+       e.store()
+   elif cmd == 'RE':
+       e.restore()
+   else:
+       x = int(message[2], 16)
+       y = int(message[3], 16)
+       message = message[4:]      
+       e.draw_raw(x, y, message)
    e.socket.send(b"\0")
 
 

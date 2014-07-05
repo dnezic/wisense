@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import sys, time
+import sys, time, os
 import dhtreader
 import zmq
 
@@ -16,15 +16,18 @@ dhtpin = 22
 x = None
 i = 0
 
+
+
 port_lcd = sys.argv[1]
 port_hub = sys.argv[2]
 
-while x == None and i < 10:
+while x == None and i < 5:
    x = dhtreader.read(dev_type, dhtpin)
+   print('Debug', x)
    if x != None:
       t, h = x
       if t and h:
-          
+         print("Data collected.") 
          data = "{0:.1f}C {1:d}%".format(t, int(h))
          out = "{0:.1f}:{1:d}".format(t, int(h))
          data = data.ljust(10, " ")         
@@ -41,6 +44,6 @@ while x == None and i < 10:
          socket.send(bytes("DHT22"+out, 'ascii'), zmq.NOBLOCK)
 
    i = i + 1
-   time.sleep(0.5)
+   time.sleep(2)
 
-
+sys.exit(0)

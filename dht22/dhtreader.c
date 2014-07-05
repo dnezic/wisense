@@ -48,7 +48,7 @@ int readDHT(int type, int pin, float *temp_p, float *hum_p)
         int bits[250];
 #endif
         int data[100];
-
+        printf("DEBUG: Start ...\n");
         // Set GPIO pin to output
         bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
 
@@ -61,10 +61,18 @@ int readDHT(int type, int pin, float *temp_p, float *hum_p)
 
         data[0] = data[1] = data[2] = data[3] = data[4] = 0;
 
+        long k = 0;
+        printf("DEBUG: Wait ...\n");
         // wait for pin to drop?
-        while (bcm2835_gpio_lev(pin) == 1) {
+        while ((bcm2835_gpio_lev(pin) == 1) && k < 10000L) {
                 usleep(1);
+                k = k + 1;
         }
+        if(k == 10000L) {
+            return -1;
+        }
+        
+        printf("DEBUG: Reading data...\n");
 
         // read data!
         for (i = 0; i < MAXTIMINGS; i++) {
