@@ -24,9 +24,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <zmq.h>
+#include <assert.h>
 
 #include <RF24.h>
-#include <dbus_sender.h>
 #include "rf24sense.h"
 
 /* CE pin is number 25. */
@@ -40,11 +41,6 @@ FILE* destFile;
 
 bool debug = false;
 
-#define DBUS_SENDER "wisense"
-#define DBUS_OBJECT "/com/svesoftware/raspberry/lcd"
-#define DBUS_INTERFACE "com.svesoftware.raspberry.lcd"
-#define DBUS_TARGET "com.svesoftware.raspberry.lcd"
-#define DBUS_METHOD "draw"
 
 void setup(void) {
 	radio.setPayloadSize(PAYLOAD_SIZE);
@@ -74,6 +70,12 @@ void setup(void) {
 	//
 	radio.printDetails();
 
+}
+
+
+void my_free (void *data, void *hint)
+{
+    free (data);
 }
 
 void loop(void) {
@@ -122,18 +124,59 @@ void loop(void) {
 				printf("DHT22 E: %d\n", (int) payload_buffer[12]);
 				printf("Counter: %d\n", (int) payload_buffer[13]);
 				printf("Error count: %d\n", (int) payload_buffer[14]);
+                                
+                                int counter = (int) payload_buffer[13];
+                                int i2c_error_count = (int) payload_buffer[14];
 
 
 				char lcd[32];
+                                char hub[64];
 				char timestr[10];
 
 				time_t now = time(NULL);
-				struct tm *t = localtime(&now);
-				strftime(timestr, sizeof(timestr) - 1, "%H:%M", t);
-                                float pressure_f = pressure / 100.0;
-                                float voltage_f = voltage / 1000.0;
+                                
+				float pressure_f = pressure / 100.0;
+                                int voltage_d = voltage;
+                                float temperature_f = temperature + (temperature_dec/100.0);
 
-				sprintf(lcd, "%s %.1fV %d.%dC %d.%d%% %.2f", timestr, voltage_f, temperature_dht, temperature_dht_dec, humidity_dht, humidity_dht_dec, pressure_f);
+				sprintf(lcd, "WS20%d.%dC %.1fhPa", temperature, temperature_dec, pressure_f);
+                                sprintf(lcd, "%-20s", lcd);
+                                
+                                sprintf(hub, "RF24L%ld:%d:%f:%f:%d:%d", now, voltage_d, temperature_f, pressure_f, counter, i2c_error_count);                                
+                                
+                                /* send data to the LCD */
+                                long linger = 1000;
+                                
+                                void *context = zmq_init(1);
+                                void *sender = zmq_socket (context, ZMQ_REQ);
+                                zmq_setsockopt(sender, ZMQ_LINGER, &linger, sizeof(linger));
+                                int rc = zmq_connect (sender, "tcp://localhost:5000");                
+                                void *data = malloc (20);
+                                assert(data);
+                                memcpy (data, lcd, 20);
+                                zmq_msg_t msg;
+                                rc = zmq_msg_init_data (&msg, data, 20, my_free, NULL);
+                                assert(rc == 0);
+                                
+                                zmq_send (sender, &msg, 1);
+                                zmq_close (sender);
+                                
+                                /* send data to the HUB */
+                                sender = zmq_socket (context, ZMQ_REQ);
+                                
+                                zmq_setsockopt(sender, ZMQ_LINGER, &linger, sizeof(linger));
+                                zmq_connect (sender, "tcp://localhost:5001");
+                                data = malloc (sizeof(hub));
+                                assert(data);
+                                memcpy (data, hub, strlen(hub));
+                                
+                                rc = zmq_msg_init_data (&msg, data, strlen(hub), my_free, NULL);
+                                assert(rc == 0);       
+                                zmq_send (sender, &msg, 1);
+                                zmq_close (sender);
+                                
+                                zmq_term(context);        
+        
 
 				if (debug) {
 					destFile = fopen(LOG_FILE, "a");
@@ -141,8 +184,7 @@ void loop(void) {
 					fclose(destFile);
 				}
 
-				/* send bus signal */
-				sendsignal(DBUS_SENDER, lcd, DBUS_TARGET, DBUS_OBJECT, DBUS_INTERFACE, DBUS_METHOD);
+				
 
 			}
 
@@ -152,9 +194,12 @@ void loop(void) {
 
 }
 
+
+
 int main(int argc, char** argv) {
 
 	printf("rf24sense - data receiver from nrf24l01p device.\n");
+        
 
 	if (argc > 1) {
 		if (strcmp(argv[1], "-v") == 0) {
@@ -173,5 +218,6 @@ int main(int argc, char** argv) {
 	while (1)
 		loop();
 
-	return 0;
+	
+        return 0;
 }
