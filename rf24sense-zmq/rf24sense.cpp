@@ -107,8 +107,8 @@ void loop(void) {
 				printf("Voltage: %d (mV)\n", voltage);
 				printf("Temperature: %d.%d\n", (int) payload_buffer[2], (int) payload_buffer[3]);
 				
-                                int temperature = (int) payload_buffer[2];
-                                int temperature_dec = (int) payload_buffer[3];
+                                int8_t temperature = (int8_t) payload_buffer[2];
+                                int8_t temperature_dec = (int8_t) payload_buffer[3];
 				long pressure = (int) payload_buffer[4];
 				pressure = pressure << 8;
 				pressure = pressure | (int) payload_buffer[5];
@@ -129,8 +129,8 @@ void loop(void) {
                                 int i2c_error_count = (int) payload_buffer[14];
 
 
-				char lcd[32];
-                                char hub[64];
+				char lcd[128];
+                                char hub[128];
 				char timestr[10];
 
 				time_t now = time(NULL);
@@ -138,15 +138,13 @@ void loop(void) {
 				float pressure_f = pressure / 100.0;
                                 int voltage_d = voltage;
                                 float temperature_f = temperature + (temperature_dec/100.0);
-
-				sprintf(lcd, "WS20%d.%dC %.1fhPa", temperature, temperature_dec, pressure_f);
+				sprintf(lcd, "WS20%d.%dC %.1f", temperature, temperature_dec, pressure_f);
                                 sprintf(lcd, "%-20s", lcd);
                                 
                                 sprintf(hub, "RF24L%ld:%d:%f:%f:%d:%d", now, voltage_d, temperature_f, pressure_f, counter, i2c_error_count);                                
                                 
                                 /* send data to the LCD */
                                 long linger = 1000;
-                                
                                 void *context = zmq_init(1);
                                 void *sender = zmq_socket (context, ZMQ_REQ);
                                 zmq_setsockopt(sender, ZMQ_LINGER, &linger, sizeof(linger));
@@ -160,7 +158,6 @@ void loop(void) {
                                 
                                 zmq_send (sender, &msg, 1);
                                 zmq_close (sender);
-                                
                                 /* send data to the HUB */
                                 sender = zmq_socket (context, ZMQ_REQ);
                                 
@@ -177,7 +174,6 @@ void loop(void) {
                                 
                                 zmq_term(context);        
         
-
 				if (debug) {
 					destFile = fopen(LOG_FILE, "a");
 					fprintf(destFile, "%s  %d (mV) %d.%dC %.2f %d.%dC %d.%d%% CNT: %d %d %d\n", timestr, voltage, temperature, temperature_dec, pressure_f, (int) payload_buffer[8], (int) payload_buffer[9], (int) payload_buffer[10], (int) payload_buffer[11], (int) payload_buffer[12], (int)payload_buffer[13], (int)payload_buffer[14]);
