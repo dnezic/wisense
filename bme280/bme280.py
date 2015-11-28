@@ -1,7 +1,12 @@
 #!/usr/bin/python
 
-import time
+import time, sys
 from quick2wire.i2c import I2CMaster, writing_bytes, reading, writing
+
+import zmq
+
+port_lcd = sys.argv[1]
+port_hub = sys.argv[2]
 
 # ===========================================================================
 # BME280 Class
@@ -202,31 +207,28 @@ bmp = BME280(mode=1, address=0x76)
 #print(bmp.readPressure())
 bmp.readAll()
 
-print('Temperature: %f' % bmp.temperature)
-print('Humidity: %f' % bmp.humidity)
-print('Pressure: %f' % bmp.pressure)
-print('Alt: %f' % bmp.readAltitude())
+#print('Temperature: %f' % bmp.temperature)
+#print('Humidity: %f' % bmp.humidity)
+#print('Pressure: %f' % bmp.pressure)
+#print('Alt: %f' % bmp.readAltitude())
 
-"""
+t = bmp.temperature
+h = bmp.humidity
+p = bmp.pressure
 
-
-temp = t_i + float(t_d / 100.0)
-hum = h_i + float(h_d / 100.0)
-
-t, h = temp, hum
-if t and h:
-    data = "{0:.1f}C {1:d}%".format(t, int(h))
-    out = "{0:.1f}:{1:d}".format(t, int(h))
-    data = data.ljust(10, " ")
+if t and h and p:
+    print(t, h, p)
+    data = "{0:.1f}C {1:d}% {2:.1f}".format(t, int(h), p)
+    out = "{0:.1f}:{1:d}:{2:.1f}".format(t, int(h), p)
+    data = data.ljust(16, " ")
     id = "WS"
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.linger = 1000
     socket.connect ("tcp://localhost:%s" % port_lcd)
-    socket.send(bytes(id+"16"+data, 'ascii'), zmq.NOBLOCK)
+    socket.send(bytes(id+"10"+data, 'ascii'), zmq.NOBLOCK)
 
     socket = context.socket(zmq.REQ)
     socket.linger = 1000
     socket.connect ("tcp://localhost:%s" % port_hub)
-    socket.send(bytes("DHT22"+out, 'ascii'), zmq.NOBLOCK)
-"""
+    socket.send(bytes("BME28"+out, 'ascii'), zmq.NOBLOCK)
