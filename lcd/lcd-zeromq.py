@@ -53,10 +53,12 @@ class LCDZeroMQ:
            self.l.setPosition(2, 0)
            self.l.writeString(text[16:])
            
-    def restore(self):        
-        self.draw_raw(1, 0, self.stored[0:16])
-        self.draw_raw(2, 0, self.stored[16:32])
-        
+    def restore(self):
+        try:        
+           self.draw_raw(1, 0, self.stored[0:16])
+           self.draw_raw(2, 0, self.stored[16:32])
+        except:
+           pass
     def store(self):
         self.stored = self.buffer
         
@@ -177,8 +179,11 @@ while True:
    else:
        x = int(message[2], 16)
        y = int(message[3], 16)
-       message = message[4:]      
-       e.draw_raw(x, y, message)
+       message = message[4:]
+       try:      
+         e.draw_raw(x, y, message)
+       except:
+         pass
    e.socket.send(b"\0")
 
 

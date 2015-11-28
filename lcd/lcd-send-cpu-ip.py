@@ -7,6 +7,7 @@ import sys
 import time
 import psutil
 
+time.sleep(10)
  
 id = "CP"
 port = sys.argv[1]
