@@ -207,10 +207,10 @@ bmp = BME280(mode=1, address=0x76)
 #print(bmp.readPressure())
 bmp.readAll()
 
-#print('Temperature: %f' % bmp.temperature)
-#print('Humidity: %f' % bmp.humidity)
-#print('Pressure: %f' % bmp.pressure)
-#print('Alt: %f' % bmp.readAltitude())
+print('Temperature: %f' % bmp.temperature)
+print('Humidity: %f' % bmp.humidity)
+print('Pressure: %f' % bmp.pressure)
+print('Alt: %f' % bmp.readAltitude())
 
 t = bmp.temperature
 h = bmp.humidity

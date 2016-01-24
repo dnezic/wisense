@@ -109,19 +109,13 @@ void loop(void) {
 				
                                 int8_t temperature = (int8_t) payload_buffer[2];
                                 int8_t temperature_dec = (int8_t) payload_buffer[3];
-				long pressure = (int) payload_buffer[4];
+
+				long pressure = (int) payload_buffer[5];
 				pressure = pressure << 8;
-				pressure = pressure | (int) payload_buffer[5];
-                                pressure = pressure << 8;
-                                pressure = pressure | (int) payload_buffer[6];
-                                pressure = pressure << 8;
-                                pressure = pressure | (int) payload_buffer[7];
-				// dht
-				int temperature_dht = (int) payload_buffer[8];
-				int temperature_dht_dec = (int) payload_buffer[9];
-				int humidity_dht = (int) payload_buffer[10];
-				int humidity_dht_dec = (int) payload_buffer[11];
-				printf("DHT22 E: %d\n", (int) payload_buffer[12]);
+				pressure = pressure | (int) payload_buffer[4];
+                                float pressure_f = pressure + ((float) payload_buffer[6] / 100);
+				int8_t humidity = (int8_t) payload_buffer[8];
+				printf("Pressure: %f\n", pressure_f);
 				printf("Counter: %d\n", (int) payload_buffer[13]);
 				printf("Error count: %d\n", (int) payload_buffer[14]);
                                 
@@ -135,13 +129,12 @@ void loop(void) {
 
 				time_t now = time(NULL);
                                 
-				float pressure_f = pressure / 100.0;
                                 int voltage_d = voltage;
                                 float temperature_f = temperature + (temperature_dec/100.0);
-				sprintf(lcd, "WS20%d.%dC %.1f", temperature, temperature_dec, pressure_f);
+				sprintf(lcd, "WS20%.1fC %d%% %.1f", temperature_f, humidity, pressure_f);
                                 sprintf(lcd, "%-20s", lcd);
                                 
-                                sprintf(hub, "RF24L%ld:%d:%f:%f:%d:%d", now, voltage_d, temperature_f, pressure_f, counter, i2c_error_count);                                
+                                sprintf(hub, "RF24L%ld:%d:%f:%f:%d:%d:%d", now, voltage_d, temperature_f, pressure_f, humidity, counter, i2c_error_count);                                
                                 
                                 /* send data to the LCD */
                                 long linger = 1000;

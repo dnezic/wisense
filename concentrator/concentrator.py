@@ -33,9 +33,10 @@ def route(message):
         voltage = data.split(":")[1]
         t = data.split(":")[2]
         p = data.split(":")[3]
-        ccc = data.split(":")[4]
-        i2c_e = data.split(":")[5]
-        c.execute("INSERT INTO sensors_rf24l VALUES (NULL," + str(voltage) + "," + str(ccc) + ",'" + tm + "'," + str(t) + "," + str(p)+ "," + str(i2c_e) + ")")
+        h = data.split(":")[4]
+        ccc = data.split(":")[5]
+        i2c_e = data.split(":")[6]
+        c.execute("INSERT INTO sensors_rf24l VALUES (NULL,'" + tm + "'," + str(t) + "," + str(p) + "," + str(i2c_e) + "," + str(voltage) + "," + str(ccc) + "," + str(h) + ")")
 
     conn.commit()
     conn.close()
