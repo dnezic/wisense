@@ -1,28 +1,28 @@
 #! /bin/sh
-# /etc/init.d/concentrator
+# /etc/init.d/lcd-zeromq
 
 
 # . /etc/rc.d/init.d/functions  # uncomment/modify for your killproc
 
-DAEMON=/home/pi/github/wisense/lcd/lcd-zeromq.py
-DIR=/home/pi/github/wisense/lcd/
-NAME=lcd-zeromq
+DAEMON=/home/pi/github/wisense/lcd-ssd1306/lcd-zmq.py
+DIR=/home/pi/github/wisense/lcd-ssd1306/
+NAME=lcd-zmq
 D_OPTS='5000'
 
 test -x $DAEMON || exit 0
 
 case "$1" in
     start)
-    echo -n "Starting lcd-zeromq: "
+    echo -n "Starting lcd-zmq: "
     start-stop-daemon -d $DIR --start -b --exec $DAEMON -- $D_OPTS
     ;;
     stop)
-    echo -n "Shutting down lcd-zeromq:"
+    echo -n "Shutting down lcd-zmq:"
     start-stop-daemon --stop --oknodo --retry 30 --exec $DAEMON
     ;;
 
     restart)
-    echo -n "Restarting lcd-zeromq: "
+    echo -n "Restarting lcd-zmq: "
     start-stop-daemon -d $DIR --stop --oknodo --retry 30 --exec $DAEMON
     start-stop-daemon -d $DIR --start -b --exec $DAEMON -- $D_OPTS
     ;;

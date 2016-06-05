@@ -1,0 +1,18 @@
+[Unit]
+Description=LCD-ZMQ
+After=syslog.target network.target remote-fs.target nss-lookup.target
+Wants=
+
+[Service]
+Type=forking
+User=pi
+Group=pi
+ExecStart=/home/pi/git/wisense/lcd-ssd1306/lcd-zmq.py
+UMask=007
+Restart=on-failure
+TimeoutStartSec=30
+PermissionsStartOnly=true
+
+
+[Install]
+WantedBy=multi-user.target

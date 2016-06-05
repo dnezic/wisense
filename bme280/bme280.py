@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
 import time, sys
-from quick2wire.i2c import I2CMaster, writing_bytes, reading, writing
-
 import zmq
+import smbus
 
 port_lcd = sys.argv[1]
 port_hub = sys.argv[2]
@@ -37,8 +36,12 @@ class BME280 :
 
   # Constructor
   def __init__(self, address=0x77, mode=1, debug=False):
-    self.i2c_device = I2CMaster(1)
+    self.i2c_device = smbus.SMBus(1)
     self.addr = address
+
+    if self.i2c_device == None or self.addr == None:
+        print('Error initializing device.')
+        return -1
 
     self.debug = debug
     # Make sure the specified mode is in the appropriate range
@@ -186,21 +189,18 @@ class BME280 :
 
 
   def _read_bytes(self, register, n):
-     bytes_ = self.i2c_device.transaction(
-                      writing_bytes(self.addr, register),
-                      reading(self.addr, n))[0]
+     bytes_ = self.i2c_device.read_i2c_block_data(self.addr, register, n)
      return bytearray(bytes_)
 
   def _write_byte(self, register, byte_):
-    write_buf = [register] + [byte_]
-    bytes_ = self.i2c_device.transaction(
-                    writing_bytes(self.addr, *write_buf))
-    return bytearray(bytes_)
+    self.i2c_device.write_byte_data(self.addr, register, byte_)
+    return None
+
+  def _read_byte(self, register):
+    return self.i2c_device.read_byte_data(self.addr, register)
 
   def _write_bytes(self, register, *bytes_):
-    write_buf = [register] + list(bytes_[0])
-    bytes_ = self.i2c_device.transaction(
-                    writing_bytes(self.addr, *write_buf))
+    bytes_ = self.i2c_device.write_i2c_block_data(self.addr, register, bytes_[0])
     return bytearray(bytes_)
 
 bmp = BME280(mode=1, address=0x76)
@@ -218,15 +218,12 @@ p = bmp.pressure
 
 if t and h and p:
     print(t, h, p)
-    data = "{0:.1f}C {1:d}% {2:.1f}".format(t, int(h), p)
-    out = "{0:.1f}:{1:d}:{2:.1f}".format(t, int(h), p)
-    data = data.ljust(16, " ")
-    id = "WS"
+    out = "{0:.1f}:{1:d}:{2:.1f}".format(t, int(h), p)    
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.linger = 1000
     socket.connect ("tcp://localhost:%s" % port_lcd)
-    socket.send(bytes(id+"10"+data, 'ascii'), zmq.NOBLOCK)
+    socket.send(bytes("BME28"+out, 'ascii'), zmq.NOBLOCK)
 
     socket = context.socket(zmq.REQ)
     socket.linger = 1000
