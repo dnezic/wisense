@@ -27,17 +27,6 @@ class LCDZeroMQ:
         self.font_ra = ImageFont.truetype('fonts/C&C Red Alert [INET].ttf', 10)
         self.deja_vu_sm = ImageFont.truetype('fonts/DejaVuSansCondensed.ttf', 10)
         self.deja_vu = ImageFont.truetype('fonts/DejaVuSansCondensed.ttf', 40)
-        #   from oled.device import ssd1306, sh1106
-        #   from oled.render import canvas
-        #   from PIL import ImageFont, ImageDraw
-        #
-        #   font = ImageFont.load_default()
-        #   device = ssd1306(port=1, address=0x3C)
-        #
-        #   with canvas(device) as draw:
-        #      draw.rectangle((0, 0, device.width, device.height), outline=0, fill=0)
-        #      draw.text(30, 40, "Hello World", font=font, fill=255)
-
 
     def go(self):
         while True:
@@ -84,3 +73,4 @@ while True:
       messages[_id] = msg
 
    e.socket.send(b"\0")
+print('End of lcd-zmq.py')

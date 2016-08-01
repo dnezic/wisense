@@ -4,10 +4,11 @@ After=syslog.target network.target remote-fs.target nss-lookup.target
 Wants=
 
 [Service]
-Type=forking
+Type=simple
 User=pi
 Group=pi
-ExecStart=/home/pi/git/wisense/lcd-ssd1306/lcd-zmq.py
+WorkingDirectory=/home/pi/git/wisense/lcd-ssd1306/
+ExecStart=/home/pi/git/wisense/lcd-ssd1306/lcd-zmq.py 6000
 UMask=007
 Restart=on-failure
 TimeoutStartSec=30

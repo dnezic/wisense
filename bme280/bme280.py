@@ -5,7 +5,7 @@ import zmq
 import smbus
 
 port_lcd = sys.argv[1]
-port_hub = sys.argv[2]
+# port_hub = sys.argv[2]
 
 # ===========================================================================
 # BME280 Class
@@ -225,7 +225,7 @@ if t and h and p:
     socket.connect ("tcp://localhost:%s" % port_lcd)
     socket.send(bytes("BME28"+out, 'ascii'), zmq.NOBLOCK)
 
-    socket = context.socket(zmq.REQ)
-    socket.linger = 1000
-    socket.connect ("tcp://localhost:%s" % port_hub)
-    socket.send(bytes("BME28"+out, 'ascii'), zmq.NOBLOCK)
+#    socket = context.socket(zmq.REQ)
+#    socket.linger = 1000
+#    socket.connect ("tcp://localhost:%s" % port_hub)
+#    socket.send(bytes("BME28"+out, 'ascii'), zmq.NOBLOCK)
