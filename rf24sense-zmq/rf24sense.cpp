@@ -30,8 +30,7 @@
 #include <RF24.h>
 #include "rf24sense.h"
 
-/* CE pin is number 25. */
-RF24 radio(SPI_DEV, 8000000, RPI_CE_PIN);
+RF24 radio(RPI_GPIO_P1_22, RPI_GPIO_P1_24, BCM2835_SPI_SPEED_8MHZ);
 
 /* Radio pipe addresses for the 2 nodes to communicate. */
 const uint64_t pipes[2] = { 0x7365727631LL, 0xF0F0F0F0E3LL };
@@ -90,95 +89,65 @@ void loop(void) {
 		unsigned char payload_buffer[PAYLOAD_SIZE];
 		bool done = false;
 
-		while (!done) {
-			done = radio.read(&payload_buffer[0], PAYLOAD_SIZE);
-			if (done) {
-				printf("Debug: ");
-				for (i = 0; i < PAYLOAD_SIZE; i++) {
-					printf("%d ", payload_buffer[i]);
-				}
-				printf("\n");
-
-				int voltage = 0;
-				voltage = voltage | payload_buffer[0];
-				voltage = voltage << 8;
-				voltage = voltage | payload_buffer[1];
-
-				printf("Voltage: %d (mV)\n", voltage);
-				printf("Temperature: %d.%d\n", (int) payload_buffer[2], (int) payload_buffer[3]);
-				
-                                int8_t temperature = (int8_t) payload_buffer[2];
-                                int8_t temperature_dec = (int8_t) payload_buffer[3];
-
-				long pressure = (int) payload_buffer[5];
-				pressure = pressure << 8;
-				pressure = pressure | (int) payload_buffer[4];
-                                float pressure_f = pressure + ((float) payload_buffer[6] / 100);
-				int8_t humidity = (int8_t) payload_buffer[8];
-				printf("Pressure: %f\n", pressure_f);
-				printf("Counter: %d\n", (int) payload_buffer[13]);
-				printf("Error count: %d\n", (int) payload_buffer[14]);
-                                
-                                int counter = (int) payload_buffer[13];
-                                int i2c_error_count = (int) payload_buffer[14];
-
-
-				char lcd[128];
-                                char hub[128];
-				char timestr[10];
-
-				time_t now = time(NULL);
-                                
-                                int voltage_d = voltage;
-                                float temperature_f = temperature + (temperature_dec/100.0);
-				sprintf(lcd, "WS20%.1fC %d%% %.1f", temperature_f, humidity, pressure_f);
-                                sprintf(lcd, "%-20s", lcd);
-                                
-                                sprintf(hub, "RF24L%ld:%d:%f:%f:%d:%d:%d", now, voltage_d, temperature_f, pressure_f, humidity, counter, i2c_error_count);                                
-                                
-                                /* send data to the LCD */
-                                long linger = 1000;
-                                void *context = zmq_init(1);
-                                void *sender = zmq_socket (context, ZMQ_REQ);
-                                zmq_setsockopt(sender, ZMQ_LINGER, &linger, sizeof(linger));
-                                int rc = zmq_connect (sender, "tcp://localhost:5000");                
-                                void *data = malloc (20);
-                                assert(data);
-                                memcpy (data, lcd, 20);
-                                zmq_msg_t msg;
-                                rc = zmq_msg_init_data (&msg, data, 20, my_free, NULL);
-                                assert(rc == 0);
-                                
-                                zmq_send (sender, &msg, 1);
-                                zmq_close (sender);
-                                /* send data to the HUB */
-                                sender = zmq_socket (context, ZMQ_REQ);
-                                
-                                zmq_setsockopt(sender, ZMQ_LINGER, &linger, sizeof(linger));
-                                zmq_connect (sender, "tcp://localhost:5001");
-                                data = malloc (sizeof(hub));
-                                assert(data);
-                                memcpy (data, hub, strlen(hub));
-                                
-                                rc = zmq_msg_init_data (&msg, data, strlen(hub), my_free, NULL);
-                                assert(rc == 0);       
-                                zmq_send (sender, &msg, 1);
-                                zmq_close (sender);
-                                
-                                zmq_term(context);        
-        
-				if (debug) {
-					destFile = fopen(LOG_FILE, "a");
-					fprintf(destFile, "%s  %d (mV) %d.%dC %.2f %d.%dC %d.%d%% CNT: %d %d %d\n", timestr, voltage, temperature, temperature_dec, pressure_f, (int) payload_buffer[8], (int) payload_buffer[9], (int) payload_buffer[10], (int) payload_buffer[11], (int) payload_buffer[12], (int)payload_buffer[13], (int)payload_buffer[14]);
-					fclose(destFile);
-				}
-
-				
-
-			}
-
+		radio.read(&payload_buffer[0], PAYLOAD_SIZE);
+		for (i = 0; i < PAYLOAD_SIZE; i++) {
+			printf("%d ", payload_buffer[i]);
 		}
+		printf("\n");
 
+		int voltage = 0;
+		voltage = voltage | payload_buffer[0];
+		voltage = voltage << 8;
+		voltage = voltage | payload_buffer[1];
+
+		printf("Voltage: %d (mV)\n", voltage);
+		printf("Temperature: %d.%d\n", (int) payload_buffer[2], (int) payload_buffer[3]);
+
+		int8_t temperature = (int8_t) payload_buffer[2];
+		int8_t temperature_dec = (int8_t) payload_buffer[3];
+
+		long pressure = (int) payload_buffer[5];
+		pressure = pressure << 8;
+		pressure = pressure | (int) payload_buffer[4];
+                float pressure_f = pressure + ((float) payload_buffer[6] / 100);
+		int8_t humidity = (int8_t) payload_buffer[8];
+		printf("Pressure: %f\n", pressure_f);
+		printf("Counter: %d\n", (int) payload_buffer[13]);
+		printf("Error count: %d\n", (int) payload_buffer[14]);
+                                
+                int counter = (int) payload_buffer[13];
+                int i2c_error_count = (int) payload_buffer[14];
+
+		char lcd[128];
+//                char hub[128];
+		char timestr[10];
+
+		time_t now = time(NULL);
+                float temperature_f = temperature + (temperature_dec/100.0);
+		sprintf(lcd, "NRF24%.1f:%d:%.1f", temperature_f, humidity, pressure_f);
+                // sprintf(lcd, "%-20s", lcd);
+                /* send data to the LCD */
+                long linger = 1000;
+                void *context = zmq_init(1);
+                void *sender = zmq_socket (context, ZMQ_REQ);
+                zmq_setsockopt(sender, ZMQ_LINGER, &linger, sizeof(linger));
+	        int rc = zmq_connect (sender, "tcp://localhost:6000");
+                void *data = malloc (20);
+                assert(data);
+                memcpy (data, lcd, 20);
+                zmq_msg_t msg;
+                rc = zmq_msg_init_data (&msg, data, 20, my_free, NULL);
+                assert(rc == 0);
+                                
+                zmq_send (sender, &msg, 1);
+                zmq_close (sender);
+                zmq_term(context);        
+        
+		if (debug) {
+			destFile = fopen(LOG_FILE, "a");
+			fprintf(destFile, "%s  %d (mV) %d.%dC %.2f %d.%dC %d.%d%% CNT: %d %d %d\n", timestr, voltage, temperature, temperature_dec, pressure_f, (int) payload_buffer[8], (int) payload_buffer[9], (int) payload_buffer[10], (int) payload_buffer[11], (int) payload_buffer[12], (int)payload_buffer[13], (int)payload_buffer[14]);
+			fclose(destFile);
+		}
 	}
 
 }
