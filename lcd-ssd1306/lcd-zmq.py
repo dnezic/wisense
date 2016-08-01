@@ -36,8 +36,9 @@ class LCDZeroMQ:
             for k in msgs:
                _id = k
                msg = messages[k]
-               self.do_draw(_id, msg)
-               time.sleep(5000)  
+               print('Draw.')
+               self.do_draw(_id, msg)               
+               time.sleep(5)
 
            
 
@@ -52,6 +53,14 @@ class LCDZeroMQ:
                 draw.text((0, 10), t + "°C", font=self.deja_vu, fill=255)
                 #draw.text((0, 20), h + "%", font=self.deja_vu, fill=255)
                 draw.text((0, 50), p + "hPa " + h + "%", font=self.deja_vu_sm, fill=255)
+        if _id == "NRF24":
+            t,h,p = msg.split(":")
+            with canvas(self.oled) as draw:
+                draw.text((0, 0), "OUTDOOR - " + tm, font=self.deja_vu_sm, fill=255)
+                draw.text((0, 10), t + "°C", font=self.deja_vu, fill=255)
+                #draw.text((0, 20), h + "%", font=self.deja_vu, fill=255)
+                draw.text((0, 50), p + "hPa " + h + "%", font=self.deja_vu_sm, fill=255)
+
         if _id == "CLOCK":
             t = msg
             with canvas(self.oled) as draw:
@@ -64,12 +73,14 @@ thread = Thread(target = e.go)
 thread.start()
 
 while True:
+   print('Waiting for message.')
    message = e.socket.recv()
    message = message.decode('utf-8', 'ignore')
    _id = message[:5]
    msg = message[5:]
 
    with lock:
+      print(msg)
       messages[_id] = msg
 
    e.socket.send(b"\0")
