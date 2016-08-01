@@ -25,7 +25,7 @@ class LCDZeroMQ:
         self.oled = sh1106(port=1, address=0x3C)
         self.font = ImageFont.load_default()
         self.font_ra = ImageFont.truetype('fonts/C&C Red Alert [INET].ttf', 10)
-        self.deja_vu_sm = ImageFont.truetype('fonts/DejaVuSansCondensed.ttf', 10)
+        self.deja_vu_sm = ImageFont.truetype('fonts/DejaVuSansCondensed.ttf', 14)
         self.deja_vu = ImageFont.truetype('fonts/DejaVuSansCondensed.ttf', 40)
 
     def go(self):

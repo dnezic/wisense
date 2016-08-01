@@ -124,7 +124,7 @@ void loop(void) {
 
 		time_t now = time(NULL);
                 float temperature_f = temperature + (temperature_dec/100.0);
-		sprintf(lcd, "NRF24%.1f:%d%:%.1f", temperature_f, humidity, pressure_f);
+		sprintf(lcd, "NRF24%.1f:%d:%.1f", temperature_f, humidity, pressure_f);
                 // sprintf(lcd, "%-20s", lcd);
                 /* send data to the LCD */
                 long linger = 1000;
