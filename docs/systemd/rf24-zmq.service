@@ -1,0 +1,18 @@
+[Unit]
+Description=RF24
+After=syslog.target network.target remote-fs.target nss-lookup.target
+Wants=
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/home/pi/git/wisense/rf24sense-zmq/rf24sense
+UMask=007
+Restart=on-failure
+TimeoutStartSec=30
+PermissionsStartOnly=false
+
+
+[Install]
+WantedBy=multi-user.target
