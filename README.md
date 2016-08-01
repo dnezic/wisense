@@ -1,74 +1,115 @@
-wisense
-=======
+# wisense
 
 Home wireless weather station for Raspberry Pi and ATTINY.
 
-Basic informations
-------------------
+## Basic informations
 
 Project is based on Raspberry Pi which acts as a message receiver for remote wireless sensors.
-Wireless communication is based on nRF24L01P+ chip from Nordic Semiconductor, and Raspberry Pi libraries are borrowed from [https://github.com/stanleyseow/RF24](https://github.com/stanleyseow/RF24) and maybe little cleaned up.
+Wireless communication is based on nRF24L01P+ chip from Nordic Semiconductor, and Raspberry Pi libraries are borrowed from [https://github.com/stanleyseow/RF24](https://github.com/stanleyseow/RF24).
 
-Project list
-------------------
+Source code for remote wireless weather station can be found here: [https://github.com/dnezic/wisense-avr](https://github.com/dnezic/wisense-avr)
 
-### 1. lcd
-Folder **lcd** contains python code for communication with LCD 16x02 display using I2C protocol. I2C is enabled using **mjkdz** board in order to save a lot of GPIO pins.
-Python script **lcd-dbus.py** listens for incoming dbus messages and sends them to the LCD display.
-Configuration for dbus protocol is placed in *docs/dbus-configuration* folder. Folder tree needs to be copied over Raspberry Pi filesystem but before that, the file **com.svesoftware.raspberry.lcd.service** in folder */docs/dbus-configuration/usr/share/dbus-1/system-services* has to be modified to match exact path of **lcd-dbus.py** script. This is required for dbus to automatically starts script when specific message is received by dbus service.
-Example of file:
+## Project installation
 
+*Note: we are starting from raspbian minimal image*
+
+Execute `raspi-config`, setup under *Advanced options*:
+
+* enable SPI
+* enable I2C
+* disable serial console
+
+Make dir `git` in home folder.
+
+Install git: `sudo apt-get install git`
+
+And then clone into folder `git`:
 ```bash
-[D-BUS Service]
-Name=com.svesoftware.raspberry.lcd
-Exec="/home/pi/raspberry/git/lcd/lcd-dbus.py" 
-User=root
+~/git> git clone https://github.com/dnezic/wisense.git
+~/git> cd wisense
 ```
 
-
-####Test LCD screen:
+Install pip3 and python3:
 ```bash
-python3 lcd-send.py
-```
-or
-```bash
-python3 lcd-time.py
+sudo apt-get install python3-pip
+sudo apt-get install python3
 ```
 
+Install additional dependencies:
+```bash
+sudo apt-get install python3-zmq
+sudo apt-get install python3-smbus
+sudo apt-get install python3-pil
+```
 
-### 2. rf24sense-dbus
-It receives messages from nRF24L01P+ chip and sends them to the lcd using dbus protocol.
-Transmission is set to "No acknowledge" with fixed payload length in order to achieve longer distances.
+## LCD
+LCD service simply listens to incoming ZMQ messages. Register LCD service:
+```bash
+sudo cp ~/git/wisense/docs/systemd/lcd-zmq.service /etc/systemd/system/
+sudo systemctl enable lcd-zmq
+sudo systemctl daemon-reload
+sudo systemctl start lcd-zmq
+```
 
-####Prerequisites:
-* dbus-sender
+Test LCD service:
+```bash
+cd /home/pi/git/wisense/lcd-ssd1306
+sudo python3 lcd-send-time.py 6000
+```
 
-  Library for sending of dbus messages.
+Set crontab:
+```bash
+crontab -e
+* * * * * /home/pi/git/wisense/lcd-ssd1306/lcd-send-time.py 6000
+```
 
-  #####Install
+If something is wrong, check if 0x3c (LCD) is visible:
+```bash
+sudo i2cdetect -y 1
+```
 
-  ```bash
-  make
-  make install
-  ```
+Disable CRON logging:
+```bash
+sudo vi /etc/default/cron
+EXTRA_OPTS="-L 0"
 
-* rf24l
+sudo service cron restart
+```
 
-  Library for nRF24L01P+ transciever control.
+## BME 280
+BME 280 is connected via I2C.
+Add to crontab:
+```bash
+* * * * * sudo python3 /home/pi/git/wisense/bme280/bme280.py 6000
+```
 
-  #####Install 
+## nrf24
+nRF24L01P is connected via SPI.
 
-  ```bash
-  make
-  make install
-  ```
+```bash
+sudo apt-get install libzmq-dev
 
-* rf24sense-dbus
+# into same folder 'git'
+cd ~/git
+~/git> git clone https://github.com/stanleyseow/RF24.git
+~/git> cd RF24/RPi/RF24
+make
+sudo make install
+```
+This will install RF24 libraries and headers to /usr/local/(include|lib)
 
-  Server for receiving of data messages from wireless sensors.
-  #####Compile and execute
+```bash
+cd ~/git/wisense/rf24sense-zmq/
+make
+sudo make install
+```
 
-  ```bash
-  make
-  ./rf24sense-dbus
-  ```  
+Register systemd service:
+```bash
+sudo cp ~/git/wisense/docs/systemd/rf24-zmq.service /etc/systemd/system/
+sudo systemctl enable rf24-zmq
+sudo systemctl daemon-reload
+sudo systemctl start rf24-zmq
+```
+
+Customize lcd-zmq.py with various fonts or display variations.
